@@ -323,15 +323,22 @@ def test_invert():
 
 def test_add():
 
-  x = Bits( 4 )( 4 )
-  y = Bits( 4 )( 4 )
-  assert x + y == 8
-  assert x + Bits( 4 )( 4 ) == 8
-  assert x + 4 == 8
+  x, y = [Bits(4)(4)] * 2
+
+  # simple (no overflow condition)
+  assert x + y          == 8
+  assert x + Bits(4)(4) == 8
+  assert x + 4          == 8
+
+  # don't extend bitwidth if added to int: overflow!
+  assert (x + 14).nbits == x.nbits
+  assert x + 14 == 2 and ( x + 14).nbits == 4
+  assert 14 + x == 2 and (14 +  x).nbits == 4
+
+  # infer wider bitwidth if both operands are Bits: no overflow possible!
   y = Bits( 4 )( 14 )
-  assert x + y == 2
-  assert x + 14 == 2
-  assert 14 + x == 2
+  assert x + y == 18 and (x + y).nbits == 5
+  assert y + x == 18 and (x + y).nbits == 5
 
   a = Bits( 4 )( 1 )
   b = Bits( 4 )( 1 )
@@ -342,18 +349,26 @@ def test_add():
 
 def test_sub():
 
-  x = Bits( 4 )( 5 )
-  y = Bits( 4 )( 4 )
-  assert x - y == 1
-  assert x - Bits(4 )( 4) == 1
-  assert x - 4 == 1
-  y = Bits( 4 )( 5 )
-  assert x - y == 0
-  assert x - 5 == 0
-  y = Bits( 4 )( 7 )
-  assert x - y == 0b1110
-  assert x - 7 == 0b1110
-  assert 9 - x == 0b0100
+  x,y = [Bits(4)(5), Bits(4)(4)]
+
+  # simple (no overflow condition)
+  assert x - y          == 1
+  assert x - Bits(4)(4) == 1
+  assert x - 4          == 1
+
+  y = Bits(4)(5)
+  assert x - y == 0 and (x - y).nbits == 5
+  assert x - 5 == 0 and (x - 5).nbits == 4
+
+  # infer wider bitwidth if both operands are Bits: no overflow possible!
+  y = Bits(4)(7)
+  assert x - y == 0b11110 and (x - y).nbits == 5
+  assert y - x == 0b00010 and (x - y).nbits == 5
+
+  # don't extend bitwidth if added to int: overflow!
+  assert x - 7 ==  0b1110 and (x - 7).nbits == 4
+  assert 7 - x ==  0b0010 and (7 - x).nbits == 4
+  assert 9 - x ==  0b0100 and (9 - x).nbits == 4
 
 def test_lshift():
 

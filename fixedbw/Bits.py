@@ -266,47 +266,62 @@ class BitsN( object ):
   #   http://www1.pldworld.com/@xilinx/html/technote/TOOL/MANUAL/21i_doc/data/fndtn/ver/ver4_4.htm
 
   def __invert__( self ):
+    'result.nbits = self.nbits'
     return Bits(self.nbits)( ~self._uint, trunc=True )
 
   def __add__( self, other ):
-    try:    return Bits(max(self.nbits, other.nbits))( self._uint + other._uint, trunc=True)
-    except: return Bits(self.nbits                  )( self._uint + other,       trunc=True)
+    'result.nbits = max( self.nbits, other.nbits ) + 1'
+    try:    return Bits(max(self.nbits, other.nbits) + 1)(self._uint + other._uint)
+    except: return Bits(self.nbits)                      (self._uint + other, trunc=True)
 
   def __sub__( self, other ):
-    try:    return Bits(max(self.nbits, other.nbits))( self._uint - other._uint, trunc=True)
-    except: return Bits(self.nbits                  )( self._uint - other,       trunc=True)
+    'result.nbits = max( self.nbits, other.nbits ) + 1'
+    try:    return Bits(max(self.nbits, other.nbits) + 1)(self._uint - other._uint )
+    except: return Bits(self.nbits)                      (self._uint - other, trunc=True)
 
   def __mul__( self, other ):
-    try:    return Bits(2*max(self.nbits, other.nbits))( self._uint * other._uint, trunc=True)
-    except: return Bits(2*self.nbits                  )( self._uint * other,       trunc=True)
+    'result.nbits = self.nbits + other.nbits'
+    try:    return Bits(self.nbits + other.nbits)(self._uint * other._uint)
+    except: return Bits(self.nbits + self .nbits)(self._uint * other, trunc=True)
+
+  def __div__(self, other):
+    'result.nbits = self.nbits'
+    try:    return Bits(self.nbits)(self._uint / other._uint)
+    except: return Bits(self.nbits)(self._uint / other, trunc=True)
+
+  def __floordiv__(self, other):
+    'result.nbits = self.nbits'
+    try:    return Bits(self.nbits)(self._uint / other._uint)
+    except: return Bits(self.nbits)(self._uint / other, trunc=True)
+
+  def __mod__(self, other):
+    'result.nbits = min( self.nbits, other.nbits )'
+    try:    return Bits(min(self.nbits, other.nbits))(self._uint % other._uint)
+    except: return Bits(self.nbits)                  (self._uint % other, trunc=True)
+
+  def __divmod__(self, other):
+    raise NotImplemented('Divmod is currently not supported')
+
+  def __pow__(self, other):
+    raise NotImplemented('Pow is currently not supported')
 
   def __radd__( self, other ):
     return self.__add__( other )
 
   def __rsub__( self, other ):
-    return Bits(_get_nbits( other ))( other ) - self
+    return Bits(self.nbits)(other - self._uint, trunc=True)
 
   def __rmul__( self, other ):
     return self.__mul__( other )
 
-  def __div__(self, other):
-    try:    return Bits(2*max(self.nbits, other.nbits))( self._uint / other._uint, trunc=True )
-    except: return Bits(2*self.nbits                  )( self._uint / other,       trunc=True )
+  def __rdiv__( self, other ):
+    raise NotImplemented('Unspecified width of left operator.')
 
-  def __floordiv__(self, other):
-    try:    return Bits(2*max(self.nbits, other.nbits))( self._uint / other._uint, trunc=True )
-    except: return Bits(2*self.nbits                  )( self._uint / other,       trunc=True )
+  def __rfloordiv__( self, other ):
+    raise NotImplemented('Unspecified width of left operator.')
 
-  def __mod__(self, other):
-    try:    return Bits(2*max(self.nbits, other.nbits))( self._uint % other._uint, trunc=True )
-    except: return Bits(2*self.nbits                  )( self._uint % other,       trunc=True )
-
-  def __divmod__(self, other):
-    raise NotImplementedError()
-
-  def __pow__(self, other):
-    raise NotImplementedError()
-
+  def __rmod__( self, other ):
+    raise NotImplemented('Unspecified width of left operator.')
 
   #------------------------------------------------------------------------
   # shift operators
@@ -322,29 +337,34 @@ class BitsN( object ):
 
   # TODO: Not implementing reflective operators because its not clear
   #       how to determine width of other object in case of lshift
-  #def __rlshift__(self, other):
-  #  return self.__lshift__( other )
-  #def __rrshift__(self, other):
-  #  return self.__rshift__( other )
+
+  def __rlshift__(self, other):
+    raise NotImplemented('Unspecified width of left operator.')
+
+  def __rrshift__(self, other):
+    raise NotImplemented('Unspecified width of left operator.')
 
   #------------------------------------------------------------------------
   # Bitwise Operators
   #------------------------------------------------------------------------
 
   def __and__( self, other ):
+    'result.nbits = max( self.nbits, other.nbits )'
     assert other >= 0
-    try:    return Bits(max(self.nbits, other.nbits))( self._uint & other._uint, trunc=True )
-    except: return Bits(self.nbits                  )( self._uint & other,       trunc=True )
+    try:    return Bits(max(self.nbits, other.nbits))(self._uint & other._uint)
+    except: return Bits(self.nbits                  )(self._uint & other, trunc=True)
 
   def __xor__( self, other ):
+    'result.nbits = max( self.nbits, other.nbits )'
     assert other >= 0
-    try:    return Bits(max( self.nbits, other.nbits))( self._uint ^ other._uint, trunc=True )
-    except: return Bits(self.nbits                   )( self._uint ^ other,       trunc=True )
+    try:    return Bits(max( self.nbits, other.nbits))(self._uint ^ other._uint)
+    except: return Bits(self.nbits                   )(self._uint ^ other, trunc=True)
 
   def __or__( self, other ):
+    'result.nbits = max( self.nbits, other.nbits )'
     assert other >= 0
-    try:    return Bits(max( self.nbits, other.nbits))( self._uint | other._uint, trunc=True )
-    except: return Bits(self.nbits                   )( self._uint | other,       trunc=True )
+    try:    return Bits(max( self.nbits, other.nbits))(self._uint | other._uint)
+    except: return Bits(self.nbits                   )(self._uint | other, trunc=True)
 
   def __rand__( self, other ):
     return self.__and__( other )
@@ -362,31 +382,38 @@ class BitsN( object ):
   # TODO: should we return Bits(1) or boolean?
 
   def __nonzero__( self ):
+    'result.nbits = Bool'
     return self._uint != 0
 
   def __eq__( self, other ):
+    'result.nbits = 1'
     if other is None: return False
     assert other >= 0
     return Bits(1)(self._uint == other)
 
   def __ne__( self, other ):
+    'result.nbits = 1'
     if other is None: return True
     assert other >= 0
     return Bits(1)(self._uint != other)
 
   def __lt__( self, other ):
+    'result.nbits = 1'
     assert other >= 0
     return Bits(1)(self._uint <  other)
 
   def __le__( self, other ):
+    'result.nbits = 1'
     assert other >= 0
     return Bits(1)(self._uint <= other)
 
   def __gt__( self, other ):
+    'result.nbits = 1'
     assert other >= 0
     return Bits(1)(self._uint >  other)
 
   def __ge__( self, other ):
+    'result.nbits = 1'
     assert other >= 0
     return Bits(1)(self._uint >= other)
 
