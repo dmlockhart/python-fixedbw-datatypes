@@ -6,16 +6,14 @@ import math
 import operator
 
 from Bits import Bits
+from Bits import _get_nbits
 
 #-----------------------------------------------------------------------
 # nbits
 #-----------------------------------------------------------------------
 def nbits( value ):
   'Return the bitwidth needed to store an integer of size value.'
-  if value > 0:
-    return value.bit_length()
-  else:
-    return value.bit_length() + 1
+  return _get_nbits( value )
 
 #-----------------------------------------------------------------------
 # clog2
