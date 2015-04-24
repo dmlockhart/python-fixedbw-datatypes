@@ -42,17 +42,34 @@ def Bits( nbits ):
 class BitsN( object ):
   'Base class for templated Bits objects.'
 
+  # Class attributes initialized by Bits() factory
+  nbits   = None
+  _max    = None
+  _min    = None
+  _mask   = None
+  _hchars = None
+  _ochars = None
+
   #---------------------------------------------------------------------
   # __init__
   #---------------------------------------------------------------------
   def __init__( self, value = 0, trunc = False ):
+    '''Initalize the value of a newly created Bits object.
+
+    If trunc = True, truncate excessively large values to fit into
+    nbits. If trunc = False (default), throw an error if the value is
+    too big to fit.'''
 
     # convert Bits objects into integer
 
     value = int( value )
 
-    if not trunc:
-      assert self._min <= value <= self._max
+    if not trunc and not (self._min <= value <= self._max):
+      raise ValueError(
+        'Provided value is to big to be represented with Bits({})!\n'
+        '({} bits are needed to represent value = {} in 2s complement.)'
+        .format( self.nbits, _get_nbits(value), value )
+      )
 
     # Convert negative values into unsigned ints and store them
 

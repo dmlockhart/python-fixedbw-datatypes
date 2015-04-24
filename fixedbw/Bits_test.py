@@ -73,20 +73,20 @@ def test_constructor():
 def test_constructor_bounds_checking():
 
   Bits( 4 )( 15 )
-  with pytest.raises( AssertionError ):
+  with pytest.raises( ValueError ):
     Bits( 4 )( 16 )
 
   Bits( 4 )( -8 )
-  with pytest.raises( AssertionError ):
+  with pytest.raises( ValueError ):
     Bits( 4 )( -9 )
-  with pytest.raises( AssertionError ):
+  with pytest.raises( ValueError ):
     Bits( 4 )( -16 )
 
   Bits( 1 )( 0 )
   Bits( 1 )( 1 )
-  with pytest.raises( AssertionError ):
+  with pytest.raises( ValueError ):
     Bits( 1 )( -1 )
-  with pytest.raises( AssertionError ):
+  with pytest.raises( ValueError ):
     Bits( 1 )( -2 )
 
 #-----------------------------------------------------------------------
