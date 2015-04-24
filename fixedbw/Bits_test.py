@@ -68,6 +68,22 @@ def test_constructor():
   assert     isinstance( Bits(4)(0), object )
 
 #-----------------------------------------------------------------------
+# test_bad_constructor
+#-----------------------------------------------------------------------
+def test_bad_constructor():
+
+  from Bits import BitsN
+
+  # Correct instantiation of a BitsN object using the Bits factory
+
+  y = Bits(3)
+
+  # Incorrect instantiation of a BitsN object using BitsN directly
+
+  with pytest.raises( TypeError ):
+    x = BitsN( 5 )
+
+#-----------------------------------------------------------------------
 # test_constructor_bounds_checking
 #-----------------------------------------------------------------------
 def test_constructor_bounds_checking():

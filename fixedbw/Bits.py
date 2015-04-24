@@ -51,7 +51,7 @@ class BitsN( object ):
   _ochars = None
 
   #---------------------------------------------------------------------
-  # __init__
+  # initializer
   #---------------------------------------------------------------------
   def __init__( self, value = 0, trunc = False ):
     '''Initalize the value of a newly created Bits object.
@@ -59,6 +59,13 @@ class BitsN( object ):
     If trunc = True, truncate excessively large values to fit into
     nbits. If trunc = False (default), throw an error if the value is
     too big to fit.'''
+
+    # make sure BitsN isn't being used incorrectly
+
+    if self.nbits == None:
+      raise TypeError(
+        'BitsN cannot be instantiated directly! Use Bits(N) instead.'
+      )
 
     # convert Bits objects into integer
 
