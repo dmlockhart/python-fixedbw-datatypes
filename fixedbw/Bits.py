@@ -4,37 +4,49 @@
 
 import copy
 
-__cache__ = {}
 
 #-----------------------------------------------------------------------
 # Bits
 #-----------------------------------------------------------------------
-def Bits( nbits ):
-  '''A metaclass constructor for creating Bits objects.
+class Bits( type ):
+  '''A metaclass constructor which returns Bits **classes**.
 
-  To construct a new Bits object, intantiate like:
+  To create a new Bits **instance**, call the Bits( nbits ) constructor
+  to get a new BitsN class, and then instantiate the returned class.
 
-    Bits( nbits=4 )( value=5 )
+    x = Bits( nbits=4 )( value=5 )   # create a Bits representing 4'd5
+    y = Bits(8)(3)                   # create a Bits representing 8'd3
+
+    Bits16 = Bits(16)                # create a Bits16 class
+    z = Bits16(2)                    # create a Bits representing 16'd2
   '''
 
-  # convert Bits objects into integer
-  nbits = int(nbits)
+  __cache__ = {}
 
-  try:
-    return __cache__[ nbits ]
-  except KeyError:
-    new_class = type( 'Bits{}'.format( nbits ),  # class name
-                      (BitsN,),                  # base class
-                                                 # class dictionary
-                      {'nbits'  : nbits,
-                       '_max'   : (2**nbits) - 1,
-                       '_min'   : -2**(nbits - 1) if nbits > 1 else 0,
-                       '_mask'  : (1 << nbits) - 1,
-                       '_hchars': ((nbits - 1) / 4) + 1,
-                       '_ochars': ((nbits - 1) / 2) + 1,
-                      } )
-    __cache__[ nbits ] = new_class
-    return new_class
+  #---------------------------------------------------------------------
+  # constructor
+  #---------------------------------------------------------------------
+  def __new__( cls, nbits ):
+    'Return a new BitsN class where N = nbits.'
+
+    # convert Bits objects into integer
+    nbits = int(nbits)
+
+    try:
+      return Bits.__cache__[ nbits ]
+    except KeyError:
+      new_class = type( 'Bits{}'.format( nbits ),  # class name
+                        (BitsN,),                  # base class
+                                                   # class dictionary
+                        {'nbits'  : nbits,
+                         '_max'   : (2**nbits) - 1,
+                         '_min'   : -2**(nbits - 1) if nbits > 1 else 0,
+                         '_mask'  : (1 << nbits) - 1,
+                         '_hchars': ((nbits - 1) / 4) + 1,
+                         '_ochars': ((nbits - 1) / 2) + 1,
+                        } )
+      Bits.__cache__[ nbits ] = new_class
+      return new_class
 
 #-----------------------------------------------------------------------
 # BitsN
