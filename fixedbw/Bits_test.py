@@ -24,6 +24,96 @@ def test_return_type():
   assert isinstance( x[2],     Bits1 )
 
 #-----------------------------------------------------------------------
+# test_constructor
+#-----------------------------------------------------------------------
+def test_constructor():
+
+  Bits4 = Bits(4)
+
+  assert Bits4(  2 ).uint() == 2
+  assert Bits4(  4 ).uint() == 4
+  assert Bits4( 15 ).uint() == 15
+
+  assert Bits4( -2 ).uint() == 0b1110
+  assert Bits4( -4 ).uint() == 0b1100
+
+  # Bits(N) returns a class, Bits(N)(value) creates an instance!
+
+  with pytest.raises( AssertionError ):
+    assert Bits4 == Bits( 4 )( 0 )
+
+  with pytest.raises( AssertionError ):
+    assert Bits(4) == Bits( 4 )( 0 )
+
+  # Bits(N) returns a class, not an instance!
+  # Does not have methods until instantiated!
+
+  with pytest.raises( TypeError ):
+    assert Bits4.uint() == 0
+
+  with pytest.raises( TypeError ):
+    assert Bits(4).uint() == 0
+
+  # Sanity checks of subclassing. Note that all types (classes) are
+  # objects, but object instances are objects, but not **not** types!
+
+  assert     isinstance( Bits4,      type   )
+  assert     isinstance( Bits4,      object )
+  assert not isinstance( Bits4(0),   type   )
+  assert     isinstance( Bits4(0),   object )
+
+  assert     isinstance( Bits(4),    type   )
+  assert     isinstance( Bits(4),    object )
+  assert not isinstance( Bits(4)(0), type   )
+  assert     isinstance( Bits(4)(0), object )
+
+#-----------------------------------------------------------------------
+# test_constructor_bounds_checking
+#-----------------------------------------------------------------------
+def test_constructor_bounds_checking():
+
+  Bits( 4 )( 15 )
+  with pytest.raises( AssertionError ):
+    Bits( 4 )( 16 )
+
+  Bits( 4 )( -8 )
+  with pytest.raises( AssertionError ):
+    Bits( 4 )( -9 )
+  with pytest.raises( AssertionError ):
+    Bits( 4 )( -16 )
+
+  Bits( 1 )( 0 )
+  Bits( 1 )( 1 )
+  with pytest.raises( AssertionError ):
+    Bits( 1 )( -1 )
+  with pytest.raises( AssertionError ):
+    Bits( 1 )( -2 )
+
+#-----------------------------------------------------------------------
+# test_construct_from_bits
+#-----------------------------------------------------------------------
+def test_construct_from_bits():
+
+  assert Bits( 4 )( Bits(4)( -2) ).uint() == 0b1110
+  assert Bits( 4 )( Bits(4)( -4) ).uint() == 0b1100
+
+  a = Bits( 8 )( 5 )
+  assert a                              == 0x05
+  assert Bits( 16 )( a ).uint()         == 0x0005
+  assert Bits( 16 )( ~a + 1 ).uint()    == 0x00FB
+  b = Bits( 32 )( 5 )
+  assert b                              == 0x00000005
+  assert Bits( 32 )( ~b + 1 ).uint()    == 0xFFFFFFFB
+  c = Bits( 32 )( 0 )
+  assert c                              == 0x00000000
+  assert Bits( 32 )( ~c )               == 0xFFFFFFFF
+  assert Bits( 32 )( ~c + 1 )           == 0x00000000
+  d = Bits( 4 )( -1 )
+  assert Bits( 8 )( d )                 == 0x0F
+
+  assert Bits( Bits(4)(4) )( 1 ).uint() == 1
+
+#-----------------------------------------------------------------------
 # test_int
 #-----------------------------------------------------------------------
 def test_int():
@@ -36,23 +126,6 @@ def test_int():
   assert Bits( 4 )( -2 ).int() == -2
   assert Bits( 4 )( -4 ).int() == -4
   assert Bits( 4 )( -8 ).int() == -8
-
-#-----------------------------------------------------------------------
-# test_int_bounds_checking
-#-----------------------------------------------------------------------
-def test_int_bounds_checking():
-
-  Bits( 4 )( 15 )
-  with pytest.raises( AssertionError ): Bits( 4 )( 16 )
-
-  Bits( 4 )( -8 )
-  with pytest.raises( AssertionError ): Bits( 4 )( -9 )
-  with pytest.raises( AssertionError ): Bits( 4 )( -16 )
-
-  Bits( 1 )( 0 )
-  Bits( 1 )( 1 )
-  with pytest.raises( AssertionError ): Bits( 1 )( -1 )
-  with pytest.raises( AssertionError ): Bits( 1 )( -2 )
 
 #-----------------------------------------------------------------------
 # test_uint
@@ -529,57 +602,6 @@ def test_mult():
 
   y = Bits( 8 )( 0b10000000 )
   assert x * y == 0b0000000000000000111111110000000
-
-#-----------------------------------------------------------------------
-# test_constructor
-#-----------------------------------------------------------------------
-def test_constructor():
-
-  Bits4 = Bits(4)
-
-  assert Bits( 4 )(  2 ).uint() == 2
-  assert Bits( 4 )(  4 ).uint() == 4
-  assert Bits( 4 )( 15 ).uint() == 15
-
-  assert Bits( 4 )( -2 ).uint() == 0b1110
-  assert Bits( 4 )( -4 ).uint() == 0b1100
-
-  # Bits(N) returns a class, Bits(N)(value) creates an instance!
-
-  with pytest.raises( AssertionError ):
-    assert Bits( 4 ) == Bits( 4 )( 0 )
-
-  with pytest.raises( TypeError ):
-    assert Bits( 4 ).uint() == 0
-
-  assert     isinstance( Bits(4),    type   )
-  assert     isinstance( Bits(4),    object )
-  assert not isinstance( Bits(4)(0), type   )
-  assert     isinstance( Bits(4)(0), object )
-
-#-----------------------------------------------------------------------
-# test_construct_from_bits
-#-----------------------------------------------------------------------
-def test_construct_from_bits():
-
-  assert Bits( 4 )( Bits(4)( -2) ).uint() == 0b1110
-  assert Bits( 4 )( Bits(4)( -4) ).uint() == 0b1100
-
-  a = Bits( 8 )( 5 )
-  assert a                              == 0x05
-  assert Bits( 16 )( a ).uint()         == 0x0005
-  assert Bits( 16 )( ~a + 1 ).uint()    == 0x00FB
-  b = Bits( 32 )( 5 )
-  assert b                              == 0x00000005
-  assert Bits( 32 )( ~b + 1 ).uint()    == 0xFFFFFFFB
-  c = Bits( 32 )( 0 )
-  assert c                              == 0x00000000
-  assert Bits( 32 )( ~c )               == 0xFFFFFFFF
-  assert Bits( 32 )( ~c + 1 )           == 0x00000000
-  d = Bits( 4 )( -1 )
-  assert Bits( 8 )( d )                 == 0x0F
-
-  assert Bits( Bits(4)(4) )( 1 ).uint() == 1
 
 #-----------------------------------------------------------------------
 # test_str
