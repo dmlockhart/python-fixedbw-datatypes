@@ -85,8 +85,8 @@ class BitsN( object ):
 
     if not trunc and not (self._min <= value <= self._max):
       raise ValueError(
-        'Provided value is to big to be represented with Bits({})!\n'
-        '({} bits are needed to represent value = {} in 2s complement.)'
+        'Provided value is too big to be represented with Bits({})!\n'
+        '({} bits are needed to represent value = {} in two\'s complement.)'
         .format( self.nbits, _get_nbits(value), value )
       )
 
@@ -205,9 +205,11 @@ class BitsN( object ):
 
       # Verify our ranges are sane
       if not (start < stop):
-        raise IndexError('Start index is not less than stop index')
+        raise IndexError('Start index ({}) is not less than stop index ({})'
+                         .format(start, stop) )
       if not (0 <= start < stop <= self.nbits):
-        raise IndexError('Bits index out of range')
+        raise IndexError('Slice indices [{}:{}] out of range (0 - {})'
+                         .format(start, stop, self.nbits) )
 
       # Create a new Bits object containing the slice value and return it
       nbits = stop - start
@@ -222,7 +224,8 @@ class BitsN( object ):
 
       # Verify the index is sane
       if not (0 <= addr < self.nbits):
-        raise IndexError('Bits index out of range')
+        raise IndexError('Bits index ({}) out of range (0 - {})'
+                         .format(addr, self.nbits) )
 
       # Create a new Bits object containing the bit value and return it
       value = (self._uint & (1 << addr)) >> addr
@@ -247,7 +250,12 @@ class BitsN( object ):
 
       # Open-ended range ( [:] )
       if start is None and stop is None:
-        assert self._min <= value <= self._max
+        if not (self._min <= value <= self._max):
+          raise ValueError(
+            'Provided value is too big to be represented with Bits({})!\n'
+            '({} bits are needed to represent value = {} in two\'s complement.)'
+            .format( self.nbits, _get_nbits(value), value )
+          )
         self._uint = value
         return
 
@@ -260,14 +268,23 @@ class BitsN( object ):
         stop = self.nbits
 
       # Verify our ranges are sane
+      if not (start < stop):
+        raise IndexError('Start index ({}) is not less than stop index ({})'
+                         .format(start, stop) )
       if not (0 <= start < stop <= self.nbits):
-        raise IndexError('Bits index out of range')
+        raise IndexError('Slice indices [{}:{}] out of range (0 - {})'
+                         .format(start, stop, self.nbits) )
 
       nbits = stop - start
 
-      # This assert fires if the value you are trying to store is wider
-      # than the bitwidth of the slice you are writing to!
-      assert nbits >= _get_nbits( value )
+      # This exception fires if the value you are trying to store is
+      # wider than the bitwidth of the slice you are writing to!
+      if not (nbits >= _get_nbits( value )):
+        raise ValueError(
+          'Provided value is too big to fit in slice [{}:{}] ({} bits)!\n'
+          '({} bits are needed to represent value = {} in two\'s complement.)'
+          .format( start, stop, nbits, _get_nbits(value), value )
+        )
 
       # Clear the bits we want to set
       ones  = (1 << nbits) - 1
@@ -283,8 +300,14 @@ class BitsN( object ):
 
       # Verify the index and values are sane
       if not (0 <= addr < self.nbits):
-        raise IndexError('Bits index out of range')
-      assert 0 <= value <= 1
+        raise IndexError('Bits index ({}) out of range (0 - {})'
+                         .format(addr, self.nbits) )
+      if not (0 <= value <= 1):
+        raise ValueError(
+          'Provided value is too big to fit in 1 bit!\n'
+          '({} bits are needed to represent value = {} in two\'s complement.)'
+          .format( _get_nbits(value), value )
+        )
 
       # Clear the bits we want to set
       mask = ~(1 << addr)
