@@ -225,6 +225,9 @@ def test_get_slice():
   assert x[1:] == 0b110
   assert x[:3] == 0b100
 
+  with pytest.raises( IndexError ):
+    assert x[::2] == 0b01
+
 #-----------------------------------------------------------------------
 # test_set_slice
 #-----------------------------------------------------------------------
@@ -253,6 +256,10 @@ def test_set_slice():
 
   with pytest.raises( ValueError ):
     x[:]   = 0b10000
+
+  with pytest.raises( IndexError ):
+    x[::2] = 0b00
+    assert x == 0b1010
 
 #-----------------------------------------------------------------------
 # test_slice_bounds_checking
