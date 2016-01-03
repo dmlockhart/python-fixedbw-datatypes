@@ -1,31 +1,32 @@
-#=======================================================================
+#==============================================================================
 # Bits.py
-#=======================================================================
+#==============================================================================
 
 import copy
+import math
+import operator
 
-
-#-----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # Bits
-#-----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class Bits( type ):
   '''A metaclass constructor which returns Bits **classes**.
 
   To create a new Bits **instance**, call the Bits( nbits ) constructor
   to get a new BitsN class, and then instantiate the returned class.
 
-    x = Bits( nbits=4 )( value=5 )   # create a Bits representing 4'd5
-    y = Bits(8)(3)                   # create a Bits representing 8'd3
+  > x = Bits( nbits=4 )( value=5 )   # create a Bits representing 4'd5
+  > y = Bits(8)(3)                   # create a Bits representing 8'd3
 
-    Bits16 = Bits(16)                # create a Bits16 class
-    z = Bits16(2)                    # create a Bits representing 16'd2
+  > Bits16 = Bits(16)                # create a Bits16 class
+  > z = Bits16(2)                    # create a Bits representing 16'd2
   '''
 
   __cache__ = {}
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # constructor
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   def __new__( cls, nbits ):
     'Return a new BitsN class where N = nbits.'
 
@@ -48,9 +49,9 @@ class Bits( type ):
       Bits.__cache__[ nbits ] = new_class
       return new_class
 
-#-----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # BitsN
-#-----------------------------------------------------------------------
+#------------------------------------------------------------------------------
 class BitsN( object ):
   'Base class for templated Bits objects.'
 
@@ -62,9 +63,9 @@ class BitsN( object ):
   _hchars = None
   _ochars = None
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # initializer
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   def __init__( self, value = 0, trunc = False ):
     '''Initalize the value of a newly created Bits object.
 
@@ -95,37 +96,37 @@ class BitsN( object ):
     value_uint = value if ( value >= 0 ) else ( ~(-value) + 1 )
     self._uint = value_uint & self._mask
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # __int__
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   def __int__( self ):
     'Type conversion to an int.'
     return int( self._uint )
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # __long__
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   def __long__( self ):
     'Type conversion to a long.'
     return long( self._uint )
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # __index__
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   def __index__( self ):
     'Behave like an int() when used as an index to slices.'
     return self._uint
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # uint
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   def uint( self ):
     'Return the unsigned integer representation of the bits.'
     return self._uint
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # int
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   def int( self ):
     'Return the signed integer representation of the bits.'
     if self[ self.nbits - 1]:
@@ -134,17 +135,17 @@ class BitsN( object ):
     else:
       return self._uint
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # bit_length
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   def bit_length( self ):
     '''Implement bit_length method provided by the int built-in.
     (Simplifies the implementation of get_nbits()).'''
     return self._uint.bit_length()
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # print methods
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
 
   def __repr__(self):
     return "Bits( {0}, {1} )".format(self.nbits, self.hex())
@@ -173,9 +174,9 @@ class BitsN( object ):
     str = "{:x}".format(self._uint).zfill( self._hchars )
     return "0x"+str
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # __getitem__
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   def __getitem__( self, addr ):
     'Read a subset of bits using slice notation.'
 
@@ -235,9 +236,9 @@ class BitsN( object ):
       value = (self._uint & (1 << addr)) >> addr
       return Bits(1)(value)
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # __setitem__
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   def __setitem__( self, addr, value ):
     'Write a subset of bits using slice notation.'
 
@@ -324,9 +325,9 @@ class BitsN( object ):
       # Set the bits
       self._uint = cleared_val | (value << addr)
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # arithmetic operators
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # For now, let's make the width equal to the max of the widths of the
   # two operands. These semantics match Verilog:
   #
@@ -390,9 +391,9 @@ class BitsN( object ):
   def __rmod__( self, other ):
     raise NotImplemented('Unspecified width of left operator.')
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # shift operators
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
 
   def __lshift__( self, other ):
     # Optimization to return 0 if shift amount is greater than self.nbits
@@ -411,9 +412,9 @@ class BitsN( object ):
   def __rrshift__(self, other):
     raise NotImplemented('Unspecified width of left operator.')
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # Bitwise Operators
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
 
   def __and__( self, other ):
     'result.nbits = max( self.nbits, other.nbits )'
@@ -442,9 +443,9 @@ class BitsN( object ):
   def __ror__( self, other ):
     return self.__or__( other )
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # comparison operators
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # TODO: allow comparison with negative numbers?
   # TODO: should we return Bits(1) or boolean?
 
@@ -484,9 +485,9 @@ class BitsN( object ):
     assert other >= 0
     return Bits(1)(self._uint >= other)
 
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
   # zero/sign extension
-  #---------------------------------------------------------------------
+  #----------------------------------------------------------------------------
 
   def _zext( self, new_width ):
     'Zero extension'
@@ -496,12 +497,91 @@ class BitsN( object ):
     'Sign extension'
     return Bits(new_width)(self.int())
 
+#------------------------------------------------------------------------------
+# nbits
+#------------------------------------------------------------------------------
+def nbits( value ):
+  'Return the bitwidth needed to store an integer of size value.'
+  return _get_nbits( value )
 
-#-----------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# clog2
+#------------------------------------------------------------------------------
+def clog2( value ):
+  'Return the bitwidth needed to index into a list of size value.'
+  assert value > 0
+  return int( math.ceil( math.log( value, 2 ) ) )
+
+#------------------------------------------------------------------------------
+# concat
+#------------------------------------------------------------------------------
+def concat( *bits_objects  ):
+  'Return the concatenation all Bits parameters as a new Bits object.'
+
+  # Calculate total new bitwidth
+  nbits = sum( [ x.nbits for x in bits_objects ] )
+
+  # Create new Bits and add each bits from bits_list to it
+  concat_bits = Bits(nbits)(0)
+
+  begin = 0
+  for bits in reversed( bits_objects ):
+    concat_bits[ begin : begin+bits.nbits ] = bits
+    begin += bits.nbits
+
+  return concat_bits
+
+#------------------------------------------------------------------------------
+# zext
+#------------------------------------------------------------------------------
+def zext( bits, new_width ):
+  'Return a zero-extended verion of the provided Bits object.'
+  return Bits(new_width)(bits.uint())
+
+#------------------------------------------------------------------------------
+# sext
+#------------------------------------------------------------------------------
+def sext( bits, new_width ):
+  'Return a sign-extended verion of the provided Bits object.'
+  return Bits(new_width)(bits.int())
+
+#------------------------------------------------------------------------------
+# reduce_and
+#------------------------------------------------------------------------------
+def reduce_and( bits ):
+  'Return a Bits1 with anded value of each individual bit in Bits.'
+  return Bits(1)(
+    reduce(operator.and_, (bits[x] for x in xrange(bits.nbits)) )
+  )
+
+#------------------------------------------------------------------------------
+# reduce_or
+#------------------------------------------------------------------------------
+def reduce_or( bits ):
+  'Return a Bits1 with the or-ed value of each individual bit in Bits.'
+  return Bits(1)(
+    reduce(operator.or_, (bits[x] for x in xrange(bits.nbits)) )
+  )
+
+#------------------------------------------------------------------------------
+# reduce_xor
+#------------------------------------------------------------------------------
+def reduce_xor( bits ):
+  'Return a Bits1 with the xored value of each individual bit in Bits.'
+
+  # verilog iterates through MSB to LSB, so we must reverse iteration
+  bits_iterator = reversed(xrange(bits.nbits))
+
+  return Bits(1)(
+    reduce(operator.xor, (bits[x] for x in bits_iterator))
+  )
+
+
+#------------------------------------------------------------------------------
 # _get_nbits
-#-----------------------------------------------------------------------
-# Return the number of bits needed to represent a value 'N'.
+#------------------------------------------------------------------------------
 def _get_nbits( N ):
+  'Return the number of bits needed to represent a value `N`.'
   if N > 0:
     return N.bit_length()
   else:
