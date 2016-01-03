@@ -1,11 +1,11 @@
 #=======================================================================
-# Bits_test.py
+# bits_test.py
 #=======================================================================
 # Tests for the Bits class.
 
 import pytest
 
-from Bits import (
+from bits import (
   Bits,
   nbits,
   clog2,
@@ -82,7 +82,7 @@ def test_constructor():
 #-----------------------------------------------------------------------
 def test_bad_constructor():
 
-  from Bits import BitsN
+  from bits import BitsN
 
   # Correct instantiation of a BitsN object using the Bits factory
 

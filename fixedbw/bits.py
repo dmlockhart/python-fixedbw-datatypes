@@ -1,5 +1,5 @@
 #==============================================================================
-# Bits.py
+# bits.py
 #==============================================================================
 
 import copy
@@ -10,7 +10,7 @@ import operator
 # Bits
 #------------------------------------------------------------------------------
 class Bits( type ):
-  '''A metaclass constructor which returns Bits **classes**.
+  '''A metaclass constructor which returns fixed-bitwidth **classes**.
 
   To create a new Bits **instance**, call the Bits( nbits ) constructor
   to get a new BitsN class, and then instantiate the returned class.
